@@ -23,6 +23,7 @@ WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 
 const char* topic = "itoyuNineAxis";     // 送信先のトピック名
+const char* topicEuler = "itoyuNineAxis/Euler";
 char* payload;                   // 送信するデータ
 
 const char* ntpServer = "ntp.jst.mfeed.ad.jp";//日本のNTP
@@ -119,7 +120,19 @@ void loop() //This code is looped forever
     String json = "{";
     json +=  "datetime:";
     json += datetime;
-    json += ",ax:";
+    json += ",";
+    /*
+    json += ",head:";
+    json += mySensor.readEulerHeading();
+    json += ",";
+    json += "roll:";
+    json += mySensor.readEulerRoll();
+    json += ",";
+    json += "pitch:";
+    json += mySensor.readEulerPitch();
+    json += ",";
+    */
+    json += "ax:";
     json += mySensor.readAccelerometer(X_AXIS);
     json += ",";
     json += "ay:";
@@ -146,7 +159,20 @@ void loop() //This code is looped forever
     json += "gz:";
     json += mySensor.readGravAcceleration(Z_AXIS);
     json += "}";
-    Serial.println(json);
+    String jsonEuler="{";
+    jsonEuler +=  "datetime:";
+    jsonEuler += datetime;
+    jsonEuler += ",";
+    jsonEuler += "head:";
+    jsonEuler += mySensor.readEulerHeading();
+    jsonEuler += ",";
+    jsonEuler += "roll:";
+    jsonEuler += mySensor.readEulerRoll();
+    jsonEuler += ",";
+    jsonEuler += "pitch:";
+    jsonEuler += mySensor.readEulerPitch();
+    jsonEuler += "}";
+    //Serial.println(json);
     
 
     Serial.println();
@@ -164,10 +190,16 @@ void loop() //This code is looped forever
     }
       }
      mqttClient.loop();
-     char jsonStr[200];
+     char jsonStr[300];
+     char jsonEulerStr[300];
      //mqttClient.publish(topic,"START");
-     json.toCharArray(jsonStr,200);
-     mqttClient.publish(topic, jsonStr);
+     json.toCharArray(jsonStr,300);
+     jsonEuler.toCharArray(jsonEulerStr,300);
+     Serial.println(jsonStr); 
+     if(!mqttClient.publish(topic, jsonStr)){
+      Serial.println("failed publish"); 
+      }
+      mqttClient.publish(topicEuler, jsonEulerStr);
     updateSensorData = true;
   }
 }
